@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的个人空间</title>
+    <style>
+        /* 基础样式 */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f0f0; /* 默认浅灰背景 */
+            transition: background 0.3s ease;
+            min-height: 100vh;
+        }
+        
+        /* 容器居中 */
+        .container {
+            max-width: 800px;
+            margin: 40px auto;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        /* 头部区域 (头像) */
+        .header {
+            padding: 30px;
+            text-align: center;
+            border-bottom: 1px solid #eee;
+        }
+        .avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            cursor: pointer;
+            border: 3px solid #fff;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+        .avatar:hover { transform: scale(1.05); }
+
+        /* 导航 Tab */
+        .tabs {
+            display: flex;
+            background: #f8f9fa;
+        }
+        .tab-btn {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            background: none;
+            font-size: 16px;
+            cursor: pointer;
+            font-weight: bold;
+            color: #555;
+            transition: background 0.2s;
+        }
+        .tab-btn:hover { background: #e9ecef; }
+        .tab-btn.active {
+            background: #fff;
+            color: #007bff;
+            border-bottom: 3px solid #007bff;
+        }
+
+        /* 内容区域 */
+        .content { padding: 30px; display: none; }
+        .content.active { display: block; }
+
+        /* 编辑器和按钮 */
+        textarea {
+            width: 100%;
+            height: 200px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            resize: vertical;
+            font-size: 16px;
+        }
+        .save-btn {
+            margin-top: 10px;
+            padding: 10px 20px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .save-btn:hover { background: #0056b3; }
+        
+        /* 隐藏右键默认菜单的提示 */
+        .hint { text-align: center; color: #888; font-size: 12px; margin-top: 20px; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- 头部 -->
+        <div class="header">
+            <img src="https://via.placeholder.com/100" alt="头像" class="avatar" id="avatar" title="点击更换头像">
+            <h2>我的数字花园</h2>
+        </div>
+
+        <!-- 导航 Tabs -->
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('text')">📝 文字</button>
+            <button class="tab-btn" onclick="switchTab('image')">🖼️ 图片</button>
+            <button class="tab-btn" onclick="switchTab('link')">🔗 超链接</button>
+        </div>
+
+        <!-- 文字内容区 -->
+        <div id="text" class="content active">
+            <h3>在线笔记</h3>
+            <textarea id="text-editor" placeholder="在这里输入你的文字，支持在线编辑..."></textarea>
+            <button class="save-btn" onclick="saveText()">保存到 R2</button>
+        </div>
+
+        <!-- 图片内容区 -->
+        <div id="image" class="content">
+            <h3>图片存档</h3>
+            <p>前端展示照片墙，需后端配合提供上传 API。</p>
+            <input type="file" id="image-upload" accept="image/*">
+            <button class="save-btn">上传图片</button>
+            <div id="image-gallery" style="margin-top: 20px;"></div>
+        </div>
+
+        <!-- 超链接内容区 -->
+        <div id="link" class="content">
+            <h3>书签与链接</h3>
+            <input type="text" id="link-url" placeholder="http://..." style="padding:5px; width:60%;">
+            <input type="text" id="link-name" placeholder="网站名称" style="padding:5px; width:20%;">
+            <button class="save-btn" onclick="addLink()">添加链接</button>
+            <ul id="link-list" style="margin-top: 20px; line-height: 2;"></ul>
+        </div>
+    </div>
+
+    <div class="hint">💡 提示：在网页空白处点击鼠标【右键】可自定义背景</div>
+
+    <script>
+        // 你的 Cloudflare Worker 接口地址 (后续部署后替换)
+        const API_BASE_URL = 'https://your-worker-name.your-subdomain.workers.dev';
+
+        // --- 1. Tab 切换逻辑 ---
+        function switchTab(tabId) {
+            document.querySelectorAll('.content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            
+            document.getElementById(tabId).classList.add('active');
+            event.currentTarget.classList.add('active');
+        }
+
+        // --- 2. 自定义背景 (右键触发) ---
+        document.body.addEventListener('contextmenu', function(e) {
+            e.preventDefault(); // 阻止浏览器默认右键菜单
+            const bgUrl = prompt("请输入背景图片的 URL，或者颜色代码 (例如 #ffe6e6):\n留空恢复默认浅灰色。");
+            
+            if (bgUrl !== null) {
+                if(bgUrl.trim() === '') {
+                    document.body.style.background = '#f0f0f0';
+                    localStorage.removeItem('site_bg');
+                } else if (bgUrl.startsWith('http')) {
+                    document.body.style.background = `url(${bgUrl}) center/cover fixed`;
+                    localStorage.setItem('site_bg', document.body.style.background);
+                } else {
+                    document.body.style.background = bgUrl;
+                    localStorage.setItem('site_bg', bgUrl);
+                }
+            }
+        });
+
+        // --- 3. 自定义头像 (点击触发) ---
+        document.getElementById('avatar').addEventListener('click', function() {
+            const avatarUrl = prompt("请输入新头像的 URL:");
+            if (avatarUrl && avatarUrl.startsWith('http')) {
+                this.src = avatarUrl;
+                localStorage.setItem('site_avatar', avatarUrl);
+            }
+        });
+
+        // --- 初始化加载本地保存的设置 ---
+        window.onload = function() {
+            const savedBg = localStorage.getItem('site_bg');
+            if (savedBg) document.body.style.background = savedBg;
+
+            const savedAvatar = localStorage.getItem('site_avatar');
+            if (savedAvatar) document.getElementById('avatar').src = savedAvatar;
+
+            // 这里可以加入 fetch(API_BASE_URL + '/get-text') 来加载你保存在 R2 的文字
+        };
+
+        // --- 4. 保存文字到后端的伪代码 ---
+        async function saveText() {
+            const content = document.getElementById('text-editor').value;
+            const password = prompt("请输入管理员密码以保存:"); // 简单防篡改
+            
+            if(!password) return;
+
+            try {
+                // 实际部署时，这里将发送 POST 请求到你的 Cloudflare Worker
+                /*
+                const response = await fetch(API_BASE_URL + '/save-text', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ content: content, password: password })
+                });
+                if(response.ok) alert("保存成功！");
+                */
+                alert("前端功能已就绪！需要配置 Cloudflare Workers 才能真正保存到 R2。");
+            } catch (err) {
+                console.error(err);
+                alert("保存失败");
+            }
+        }
+
+        // --- 5. 添加超链接的简单演示 ---
+        function addLink() {
+            const url = document.getElementById('link-url').value;
+            const name = document.getElementById('link-name').value;
+            if(url && name) {
+                const li = document.createElement('li');
+                li.innerHTML = `<a href="${url}" target="_blank">${name}</a>`;
+                document.getElementById('link-list').appendChild(li);
+                // 同理，这里应该调用 API 保存到 R2
+            }
+        }
+    </script>
+</body>
+</html>
