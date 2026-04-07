@@ -3,142 +3,60 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Untitled - Minimalist Space</title>
+    <title>Minimalist Space</title>
     <style>
-        /* Tumblr / Lofter 极简风格配色 */
-        :root {
-            --bg-color: #fafafa;
-            --text-main: #222222;
-            --text-muted: #888888;
-            --border-light: #eeeeee;
-            --accent: #000000;
-        }
-
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            line-height: 1.6;
-        }
-
-        /* 窄版居中容器 */
-        .container {
-            max-width: 540px;
-            margin: 60px auto;
-            padding: 0 20px;
-        }
-
-        /* 头部：头像与简介 */
-        .header {
-            text-align: center;
-            margin-bottom: 40px;
-        }
+        :root { --bg-color: #fafafa; --text-main: #222; --text-muted: #888; --border-light: #eee; --accent: #000; }
+        body { margin: 0; padding: 0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: var(--bg-color); color: var(--text-main); line-height: 1.6; }
+        .container { max-width: 540px; margin: 60px auto; padding: 0 20px; }
         
-        /* 头像容器及遮罩效果 */
-        .avatar-wrapper {
-            position: relative;
-            display: inline-block;
-            cursor: pointer;
-        }
-        .avatar {
-            width: 80px;
-            height: 80px;
-            border-radius: 8px; /* 轻微圆角，比纯圆更复古 */
-            object-fit: cover;
-            display: block;
-            background: #eee;
-        }
-        .avatar-overlay {
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.4);
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-            border-radius: 8px;
-            opacity: 0;
-            transition: opacity 0.2s;
-        }
-        .avatar-wrapper:hover .avatar-overlay { opacity: 1; }
+        /* 头部 */
+        .header { text-align: center; margin-bottom: 40px; }
+        .avatar-wrapper { position: relative; display: inline-block; }
+        .avatar { width: 80px; height: 80px; border-radius: 8px; object-fit: cover; background: #eee; }
+        .header h1 { font-size: 20px; font-weight: 500; margin: 15px 0 5px 0; letter-spacing: 1px; }
+        .header p { font-size: 14px; color: var(--text-muted); margin: 0; }
 
-        .header h1 {
-            font-size: 20px;
-            font-weight: 500;
-            margin: 15px 0 5px 0;
-            letter-spacing: 1px;
-        }
-        .header p {
-            font-size: 14px;
-            color: var(--text-muted);
-            margin: 0;
-        }
+        /* ================= 权限控制核心 CSS ================= */
+        /* 默认隐藏所有管理员专属元素 */
+        .admin-only { display: none !important; }
+        
+        /* 当 body 拥有 is-admin 类时，显示这些元素 */
+        body.is-admin .admin-only { display: block !important; }
+        body.is-admin .admin-only-flex { display: flex !important; }
+        
+        /* 头像只有在管理员模式下才有遮罩和鼠标手势 */
+        body.is-admin .avatar-wrapper { cursor: pointer; }
+        .avatar-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.4); color: white; display: none; align-items: center; justify-content: center; font-size: 12px; border-radius: 8px; transition: opacity 0.2s; opacity: 0; }
+        body.is-admin .avatar-overlay { display: flex; }
+        body.is-admin .avatar-wrapper:hover .avatar-overlay { opacity: 1; }
+        /* ===================================================== */
 
-        /* 极简导航 */
-        .nav {
-            display: flex;
-            justify-content: center;
-            gap: 30px;
-            margin-bottom: 30px;
-            border-bottom: 1px solid var(--border-light);
-            padding-bottom: 10px;
-        }
-        .nav-item {
-            font-size: 13px;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            color: var(--text-muted);
-            cursor: pointer;
-            transition: color 0.2s;
-        }
-        .nav-item:hover { color: var(--accent); }
-        .nav-item.active { color: var(--accent); font-weight: bold; }
+        /* 导航 */
+        .nav { justify-content: center; gap: 30px; margin-bottom: 30px; border-bottom: 1px solid var(--border-light); padding-bottom: 10px; }
+        .nav-item { font-size: 13px; text-transform: uppercase; letter-spacing: 2px; color: var(--text-muted); cursor: pointer; transition: color 0.2s; }
+        .nav-item:hover, .nav-item.active { color: var(--accent); font-weight: bold; }
 
-        /* 内容区切换 */
+        /* 内容区 */
         .tab-content { display: none; animation: fadeIn 0.4s ease; }
         .tab-content.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* 输入区与按钮 */
-        textarea {
-            width: 100%;
-            height: 150px;
-            border: none;
-            background: transparent;
-            font-size: 15px;
-            color: var(--text-main);
-            resize: none;
-            outline: none;
-            font-family: inherit;
-        }
-        textarea::placeholder { color: #ccc; }
-        
-        .action-row {
-            display: flex;
-            justify-content: flex-end;
-            margin-top: 10px;
-        }
-        .btn {
-            background: transparent;
-            border: 1px solid var(--text-main);
-            color: var(--text-main);
-            padding: 6px 16px;
-            font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .btn:hover {
-            background: var(--text-main);
-            color: white;
-        }
+        /* 输入与按钮 */
+        textarea, input[type="text"] { width: 100%; border: none; border-bottom: 1px solid #eee; background: transparent; font-size: 15px; color: var(--text-main); outline: none; padding: 10px 0; font-family: inherit; }
+        textarea { height: 80px; resize: none; margin-bottom: 10px; }
+        .action-row { display: flex; justify-content: flex-end; margin-top: 10px; margin-bottom: 30px; }
+        .btn { background: transparent; border: 1px solid var(--text-main); color: var(--text-main); padding: 6px 16px; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; transition: all 0.2s; }
+        .btn:hover { background: var(--text-main); color: white; }
 
-        /* 隐藏的文件上传组件 */
-        #file-input { display: none; }
+        /* 展示流 */
+        .feed-item { margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid #f0f0f0; }
+        .feed-text { font-size: 15px; white-space: pre-wrap; }
+        .feed-link { color: var(--accent); font-weight: bold; text-decoration: none; border-bottom: 1px solid var(--accent); }
+
+        /* 底部版权 & 隐秘登录入口 */
+        .footer { text-align: center; margin-top: 50px; font-size: 12px; color: #ccc; padding-bottom: 30px; }
+        .secret-login { cursor: pointer; user-select: none; }
+        .logout-btn { color: #888; text-decoration: underline; cursor: pointer; margin-left: 10px; }
     </style>
 </head>
 <body>
@@ -146,106 +64,219 @@
     <div class="container">
         <!-- 头部 -->
         <div class="header">
-            <!-- 头像区域，点击触发上传 -->
-            <div class="avatar-wrapper" onclick="document.getElementById('file-input').click()">
+            <!-- onclick 加入了判断：只有是管理员才能触发文件选择 -->
+            <div class="avatar-wrapper" onclick="if(document.body.classList.contains('is-admin')) document.getElementById('avatar-input').click()">
                 <img src="https://via.placeholder.com/80/cccccc/ffffff?text=Avatar" alt="头像" class="avatar" id="avatar-img">
                 <div class="avatar-overlay">更换头像</div>
             </div>
-            <!-- 隐藏的文件选择器 -->
-            <input type="file" id="file-input" accept="image/*" onchange="uploadImage(event, 'avatar')">
-            
+            <input type="file" id="avatar-input" accept="image/*" style="display: none;" onchange="uploadFile(event, 'avatar')">
             <h1>我的碎片集</h1>
             <p>Somewhere only we know.</p>
         </div>
 
-        <!-- 导航 -->
-        <div class="nav">
-            <div class="nav-item active" onclick="switchTab('text')">Text</div>
-            <div class="nav-item" onclick="switchTab('photo')">Photo</div>
-            <div class="nav-item" onclick="switchTab('link')">Link</div>
-        </div>
+        <!-- 发布控制台 (管理员专属) -->
+        <div id="admin-panel" class="admin-only">
+            <div class="nav admin-only-flex">
+                <div class="nav-item active" onclick="switchTab('text')">Text</div>
+                <div class="nav-item" onclick="switchTab('photo')">Photo</div>
+                <div class="nav-item" onclick="switchTab('link')">Link</div>
+            </div>
 
-        <!-- 文字区 -->
-        <div id="text" class="tab-content active">
-            <textarea id="editor" placeholder="记录当下的想法..."></textarea>
-            <div class="action-row">
-                <button class="btn" onclick="savePost('text')">Post</button>
+            <div id="text" class="tab-content active">
+                <textarea id="text-input" placeholder="记录当下的想法..."></textarea>
+                <div class="action-row"><button class="btn" onclick="postContent('text')">Post</button></div>
+            </div>
+
+            <div id="photo" class="tab-content">
+                <div style="text-align: center; padding: 40px; border: 1px dashed #ccc; cursor: pointer; margin-bottom: 10px;" onclick="document.getElementById('photo-input').click()">
+                    <p style="color: #888;">点击选择图片上传到时间线</p>
+                </div>
+                <input type="file" id="photo-input" accept="image/*" style="display: none;" onchange="uploadFile(event, 'photo')">
+            </div>
+
+            <div id="link" class="tab-content">
+                <input type="text" id="link-url" placeholder="输入链接 URL... (如 https://...)">
+                <input type="text" id="link-desc" placeholder="链接描述...">
+                <div class="action-row"><button class="btn" onclick="postContent('link')">Add Link</button></div>
             </div>
         </div>
 
-        <!-- 图片区 -->
-        <div id="photo" class="tab-content">
-            <div style="text-align: center; padding: 40px; border: 1px dashed #ccc; cursor: pointer;" onclick="document.getElementById('photo-input').click()">
-                <p style="color: #888;">点击选择图片上传</p>
-            </div>
-            <input type="file" id="photo-input" accept="image/*" style="display: none;" onchange="uploadImage(event, 'post')">
+        <!-- 展示时间线 (任何人可见) -->
+        <div id="feed-container">
+            <p style="text-align: center; color: #ccc; font-size: 14px;">Loading...</p>
         </div>
 
-        <!-- 链接区 -->
-        <div id="link" class="tab-content">
-            <input type="text" placeholder="输入链接 URL..." style="width: 100%; border: none; border-bottom: 1px solid #eee; padding: 10px 0; font-size: 15px; outline: none; background: transparent; margin-bottom: 10px;">
-            <input type="text" placeholder="链接描述..." style="width: 100%; border: none; border-bottom: 1px solid #eee; padding: 10px 0; font-size: 15px; outline: none; background: transparent;">
-            <div class="action-row" style="margin-top: 20px;">
-                <button class="btn" onclick="savePost('link')">Add Link</button>
-            </div>
+        <!-- 底部隐秘入口 -->
+        <div class="footer">
+            <span class="secret-login" onclick="handleLoginClick()">© 2024</span> Space.
+            <span id="logout-ui" class="admin-only logout-btn" onclick="logout()">退出管理</span>
         </div>
     </div>
 
     <script>
-        const API_BASE_URL = 'keystorage.winnisky25.workers.dev';
+        // ！！！换成你的 Worker 网址！！！
+        const API_BASE_URL = 'https://keystorage.winnisky25.workers.dev'; 
+        
+        let blogData = { avatar: "", textPosts: [], links: [] };
 
-        // 切换 Tab
+        // ================= 权限控制逻辑 =================
+        function checkLoginState() {
+            // 如果本地缓存里有密码，就默认进入博主模式
+            if (localStorage.getItem('adminPass')) {
+                document.body.classList.add('is-admin');
+            } else {
+                document.body.classList.remove('is-admin');
+            }
+        }
+
+        async function handleLoginClick() {
+            if (document.body.classList.contains('is-admin')) return; // 已登录不作处理
+            
+            const pass = prompt("站长通道：请输入管理密码");
+            if (!pass) return;
+
+            try {
+                // 向后端验证密码对不对
+                const res = await fetch(`${API_BASE_URL}/verify-auth`, {
+                    method: 'POST',
+                    headers: { 'Admin-Password': pass }
+                });
+                
+                if (res.ok) {
+                    // 密码正确，存入本地并刷新状态
+                    localStorage.setItem('adminPass', pass);
+                    checkLoginState();
+                    alert("欢迎回来，站长！编辑功能已解锁。");
+                } else {
+                    alert("密码错误，访客请退散。");
+                }
+            } catch (err) {
+                alert("网络或接口错误。");
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('adminPass');
+            checkLoginState();
+            alert("已退出管理模式，当前为纯净访客视图。");
+        }
+
+        // 一个通用的获取当前密码的函数，失效自动清理
+        function getAuthPass() {
+            const pass = localStorage.getItem('adminPass');
+            if (!pass) {
+                alert("认证失效，请点击底部 © 重新登录！");
+                document.body.classList.remove('is-admin');
+                return null;
+            }
+            return pass;
+        }
+        // ===============================================
+
+        window.onload = async function() {
+            checkLoginState(); // 初始化权限状态
+
+            try {
+                const res = await fetch(`${API_BASE_URL}/get-data`);
+                blogData = await res.json();
+                if (blogData.avatar) document.getElementById('avatar-img').src = blogData.avatar;
+                renderFeed();
+            } catch (err) {
+                document.getElementById('feed-container').innerHTML = "<p style='text-align:center;'>加载失败，请检查 Worker 网址。</p>";
+            }
+        };
+
+        function renderFeed() {
+            const container = document.getElementById('feed-container');
+            container.innerHTML = "";
+            blogData.textPosts.slice().reverse().forEach(post => {
+                container.innerHTML += `<div class="feed-item"><div class="feed-text">${post}</div></div>`;
+            });
+            blogData.links.slice().reverse().forEach(link => {
+                container.innerHTML += `<div class="feed-item"><a href="${link.url}" target="_blank" class="feed-link">${link.desc}</a></div>`;
+            });
+        }
+
+        async function postContent(type) {
+            const pass = getAuthPass();
+            if (!pass) return; // 没密码就阻断
+
+            if (type === 'text') {
+                const text = document.getElementById('text-input').value;
+                if (!text) return alert("内容不能为空");
+                blogData.textPosts.push(text);
+                document.getElementById('text-input').value = "";
+            } else if (type === 'link') {
+                const url = document.getElementById('link-url').value;
+                const desc = document.getElementById('link-desc').value;
+                if (!url || !desc) return alert("请填写完整");
+                blogData.links.push({ url: url, desc: desc });
+                document.getElementById('link-url').value = "";
+                document.getElementById('link-desc').value = "";
+            }
+
+            saveDataToBackend(pass);
+        }
+
+        async function uploadFile(event, type) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const pass = getAuthPass();
+            if (!pass) return;
+
+            document.getElementById('feed-container').innerHTML = "<p style='text-align:center; color:#888;'>媒体上传中，请稍候...</p>";
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/upload-image?filename=${encodeURIComponent(file.name)}`, {
+                    method: 'POST',
+                    headers: { 'Admin-Password': pass },
+                    body: file
+                });
+
+                if (response.status === 403) throw new Error("认证失效，请重新登录");
+                if (!response.ok) throw new Error("上传失败");
+
+                const imageUrl = await response.text();
+
+                if (type === 'avatar') {
+                    blogData.avatar = imageUrl;
+                    document.getElementById('avatar-img').src = imageUrl;
+                    saveDataToBackend(pass);
+                } else if (type === 'photo') {
+                    blogData.textPosts.push(`<img src="${imageUrl}" style="max-width:100%; border-radius:5px;">`);
+                    saveDataToBackend(pass);
+                }
+            } catch (err) {
+                alert(err.message);
+                if (err.message.includes('认证失效')) logout();
+                renderFeed();
+            }
+        }
+
+        async function saveDataToBackend(pass) {
+            try {
+                const res = await fetch(`${API_BASE_URL}/save-data`, {
+                    method: 'POST',
+                    headers: { 'Admin-Password': pass, 'Content-Type': 'application/json' },
+                    body: JSON.stringify(blogData)
+                });
+                if (res.ok) {
+                    renderFeed();
+                } else {
+                    throw new Error("密码错误");
+                }
+            } catch (err) {
+                alert("保存失败：" + err.message);
+                if (err.message.includes('密码错误')) logout();
+            }
+        }
+
         function switchTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
             document.getElementById(tabId).classList.add('active');
             event.currentTarget.classList.add('active');
-        }
-
-        // 上传图片（头像 或 博客图片）
-        async function uploadImage(event, type) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            // 1. 前端先预览 (不需要等后端)
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                if(type === 'avatar') {
-                    document.getElementById('avatar-img').src = e.target.result;
-                    // 这里可以加入保存头像地址到 localStorage 的逻辑
-                } else {
-                    alert("图片已选择，准备上传...");
-                }
-            }
-            reader.readAsDataURL(file);
-
-            // 2. 发送给后端 R2 存储
-            const password = prompt("请输入密码以授权上传：");
-            if(!password) return;
-
-            try {
-                // 将文件作为纯二进制流发送给后端
-                const response = await fetch(`${API_BASE_URL}/upload-image?filename=${file.name}`, {
-                    method: 'POST',
-                    headers: { 'Admin-Password': password }, // 密码放在请求头，文件放在body
-                    body: file
-                });
-
-                if(response.ok) {
-                    const imageUrl = await response.text();
-                    console.log("图片已存入 R2，公开访问地址: ", imageUrl);
-                    if(type !== 'avatar') alert("图片上传成功！");
-                } else {
-                    alert("上传失败：密码错误或网络问题");
-                }
-            } catch (err) {
-                console.error(err);
-            }
-        }
-
-        // 保存文字/链接伪代码
-        function savePost(type) {
-            alert("风格已替换为极简风。连接后端后即可正式发布！");
         }
     </script>
 </body>
