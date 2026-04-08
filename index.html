@@ -7,8 +7,27 @@
     <style>
         :root { --bg-color: #fafafa; --text-main: #222; --text-muted: #888; --border-light: #eee; --accent: #000; }
         body { margin: 0; padding: 0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: var(--bg-color); color: var(--text-main); line-height: 1.6; }
-        .container { max-width: 540px; margin: 60px auto; padding: 0 20px; }
         
+        /* 布局：左右侧栏 + 中间主内容 */
+        .layout { display: flex; max-width: 1000px; margin: 0 auto; padding: 60px 20px; position: relative; }
+        .sidebar { width: 200px; flex-shrink: 0; }
+        .container { flex-grow: 1; max-width: 540px; margin: 0 40px; }
+        
+        /* 侧栏样式 */
+        .sidebar h3 { font-size: 14px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-top: 0; cursor: pointer;}
+        .sidebar ul { list-style: none; padding: 0; margin: 0; }
+        .sidebar li { font-size: 14px; margin-bottom: 10px; cursor: pointer; color: var(--text-muted); transition: color 0.2s; }
+        .sidebar li:hover, .sidebar li.active { color: var(--accent); font-weight: bold; }
+        details summary { cursor: pointer; outline: none; user-select: none; font-size: 14px; font-weight: bold; margin-bottom: 10px; }
+        details { margin-bottom: 20px; }
+
+        /* 响应式：小屏幕隐藏侧栏并作为下拉菜单 */
+        @media (max-width: 850px) {
+            .layout { flex-direction: column; padding: 20px; }
+            .sidebar { width: 100%; margin-bottom: 20px; }
+            .container { margin: 0; width: 100%; }
+        }
+
         /* 头部 */
         .header { text-align: center; margin-bottom: 40px; }
         .avatar-wrapper { position: relative; display: inline-block; }
@@ -16,100 +35,151 @@
         .header h1 { font-size: 20px; font-weight: 500; margin: 15px 0 5px 0; letter-spacing: 1px; }
         .header p { font-size: 14px; color: var(--text-muted); margin: 0; }
 
-        /* ================= 权限控制核心 CSS ================= */
-        /* 默认隐藏所有管理员专属元素 */
+        /* 权限控制核心 CSS */
         .admin-only { display: none !important; }
-        
-        /* 当 body 拥有 is-admin 类时，显示这些元素 */
         body.is-admin .admin-only { display: block !important; }
         body.is-admin .admin-only-flex { display: flex !important; }
+        body.is-admin .admin-only-inline { display: inline-block !important; }
         
-        /* 头像只有在管理员模式下才有遮罩和鼠标手势 */
         body.is-admin .avatar-wrapper { cursor: pointer; }
         .avatar-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.4); color: white; display: none; align-items: center; justify-content: center; font-size: 12px; border-radius: 8px; transition: opacity 0.2s; opacity: 0; }
         body.is-admin .avatar-overlay { display: flex; }
         body.is-admin .avatar-wrapper:hover .avatar-overlay { opacity: 1; }
-        /* ===================================================== */
 
-        /* 导航 */
-        .nav { justify-content: center; gap: 30px; margin-bottom: 30px; border-bottom: 1px solid var(--border-light); padding-bottom: 10px; }
+        /* 导航与输入区 */
+        .nav { justify-content: center; gap: 30px; margin-bottom: 20px; border-bottom: 1px solid var(--border-light); padding-bottom: 10px; }
         .nav-item { font-size: 13px; text-transform: uppercase; letter-spacing: 2px; color: var(--text-muted); cursor: pointer; transition: color 0.2s; }
         .nav-item:hover, .nav-item.active { color: var(--accent); font-weight: bold; }
-
-        /* 内容区 */
         .tab-content { display: none; animation: fadeIn 0.4s ease; }
         .tab-content.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* 输入与按钮 */
         textarea, input[type="text"] { width: 100%; border: none; border-bottom: 1px solid #eee; background: transparent; font-size: 15px; color: var(--text-main); outline: none; padding: 10px 0; font-family: inherit; }
         textarea { height: 80px; resize: none; margin-bottom: 10px; }
-        .action-row { display: flex; justify-content: flex-end; margin-top: 10px; margin-bottom: 30px; }
+        .action-row { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; margin-bottom: 30px; }
+        
         .btn { background: transparent; border: 1px solid var(--text-main); color: var(--text-main); padding: 6px 16px; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; transition: all 0.2s; }
         .btn:hover { background: var(--text-main); color: white; }
+        .btn-small { padding: 2px 8px; font-size: 11px; margin-left: 5px; color: #888; border-color: #ccc; }
+        .btn-small:hover { border-color: var(--text-main); color: var(--text-main); background: transparent; }
 
         /* 展示流 */
-        .feed-item { margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid #f0f0f0; }
-        .feed-text { font-size: 15px; white-space: pre-wrap; }
-        .feed-link { color: var(--accent); font-weight: bold; text-decoration: none; border-bottom: 1px solid var(--accent); }
-
-        /* 底部版权 & 隐秘登录入口 */
+        .feed-header { display: flex; justify-content: space-between; margin-bottom: 20px; font-size: 13px; color: var(--text-muted); border-bottom: 1px solid #f0f0f0; padding-bottom: 10px; }
+        .feed-item { margin-bottom: 30px; padding-bottom: 10px; border-bottom: 1px dashed #f0f0f0; position: relative; }
+        .feed-text { font-size: 15px; white-space: pre-wrap; margin-bottom: 10px; }
+        .feed-link { color: var(--accent); font-weight: bold; text-decoration: none; border-bottom: 1px solid var(--accent); display: inline-block; margin-bottom: 10px; }
+        .feed-meta { font-size: 12px; color: #aaa; display: flex; justify-content: space-between; align-items: center; }
+        .feed-tags { color: #888; margin-right: 10px; }
+        
+        /* 底部 */
         .footer { text-align: center; margin-top: 50px; font-size: 12px; color: #ccc; padding-bottom: 30px; }
         .secret-login { cursor: pointer; user-select: none; }
         .logout-btn { color: #888; text-decoration: underline; cursor: pointer; margin-left: 10px; }
+
+        /* 模态框 (用于编辑) */
+        #edit-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 100; align-items: center; justify-content: center; }
+        .modal-content { background: white; padding: 20px; border-radius: 8px; width: 90%; max-width: 500px; }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <!-- 头部 -->
-        <div class="header">
-            <!-- onclick 加入了判断：只有是管理员才能触发文件选择 -->
-            <div class="avatar-wrapper" onclick="if(document.body.classList.contains('is-admin')) document.getElementById('avatar-input').click()">
-                <img src="https://via.placeholder.com/80/cccccc/ffffff?text=Avatar" alt="头像" class="avatar" id="avatar-img">
-                <div class="avatar-overlay">更换头像</div>
-            </div>
-            <input type="file" id="avatar-input" accept="image/*" style="display: none;" onchange="uploadFile(event, 'avatar')">
-            <h1>我的碎片集</h1>
-            <p>Somewhere only we know.</p>
-        </div>
+    <div class="layout">
+        <!-- 左侧栏：归档合集 -->
+        <aside class="sidebar sidebar-left">
+            <ul>
+                <li id="nav-all" class="active" onclick="setFilter('all', null)">全部碎片</li>
+            </ul>
+            <br>
+            <details closed>
+                <summary>归档合集</summary>
+                <ul id="collection-list">
+                    <!-- JS 动态生成合集列表 -->
+                </ul>
+            </details>
+        </aside>
 
-        <!-- 发布控制台 (管理员专属) -->
-        <div id="admin-panel" class="admin-only">
-            <div class="nav admin-only-flex">
-                <div class="nav-item active" onclick="switchTab('text')">Text</div>
-                <div class="nav-item" onclick="switchTab('photo')">Photo</div>
-                <div class="nav-item" onclick="switchTab('link')">Link</div>
-            </div>
-
-            <div id="text" class="tab-content active">
-                <textarea id="text-input" placeholder="记录当下的想法..."></textarea>
-                <div class="action-row"><button class="btn" onclick="postContent('text')">Post</button></div>
-            </div>
-
-            <div id="photo" class="tab-content">
-                <div style="text-align: center; padding: 40px; border: 1px dashed #ccc; cursor: pointer; margin-bottom: 10px;" onclick="document.getElementById('photo-input').click()">
-                    <p style="color: #888;">点击选择图片上传到时间线</p>
+        <!-- 中间主内容区 -->
+        <main class="container">
+            <!-- 头部 -->
+            <div class="header">
+                <div class="avatar-wrapper" onclick="if(document.body.classList.contains('is-admin')) document.getElementById('avatar-input').click()">
+                    <img src="https://via.placeholder.com/80/cccccc/ffffff?text=Avatar" alt="头像" class="avatar" id="avatar-img">
+                    <div class="avatar-overlay">更换头像</div>
                 </div>
-                <input type="file" id="photo-input" accept="image/*" style="display: none;" onchange="uploadFile(event, 'photo')">
+                <input type="file" id="avatar-input" accept="image/*" style="display: none;" onchange="uploadFile(event, 'avatar')">
+                <h1>我的碎片集</h1>
+                <p>Somewhere only we know.</p>
             </div>
 
-            <div id="link" class="tab-content">
-                <input type="text" id="link-url" placeholder="输入链接 URL... (如 https://...)">
-                <input type="text" id="link-desc" placeholder="链接描述...">
-                <div class="action-row"><button class="btn" onclick="postContent('link')">Add Link</button></div>
+            <!-- 发布控制台 (管理员专属) -->
+            <div id="admin-panel" class="admin-only">
+                <div class="nav admin-only-flex">
+                    <div class="nav-item active" onclick="switchTab('text')">Text / Photo</div>
+                    <div class="nav-item" onclick="switchTab('link')">Link</div>
+                </div>
+
+                <!-- 选填的合集归档输入框 -->
+                <input type="text" id="post-collections" placeholder="归档合集 (选填，多个用逗号分隔，如: 摄影,日常)" style="margin-bottom: 15px; font-size: 13px;">
+
+                <div id="text" class="tab-content active">
+                    <textarea id="text-input" placeholder="记录当下的想法..."></textarea>
+                    <div class="action-row">
+                        <button class="btn btn-small" onclick="document.getElementById('photo-input').click()">+ 插入图片</button>
+                        <input type="file" id="photo-input" accept="image/*" style="display: none;" onchange="uploadFile(event, 'photo')">
+                        <button class="btn" onclick="postContent('text')">发布博文</button>
+                    </div>
+                </div>
+
+                <div id="link" class="tab-content">
+                    <input type="text" id="link-url" placeholder="输入链接 URL... (如 https://...)">
+                    <input type="text" id="link-desc" placeholder="链接描述...">
+                    <div class="action-row" style="justify-content: flex-end;">
+                        <button class="btn" onclick="postContent('link')">添加链接</button>
+                    </div>
+                </div>
             </div>
-        </div>
 
-        <!-- 展示时间线 (任何人可见) -->
-        <div id="feed-container">
-            <p style="text-align: center; color: #ccc; font-size: 14px;">Loading...</p>
-        </div>
+            <!-- 列表头部控制区 -->
+            <div class="feed-header">
+                <span id="current-view-title">全部内容</span>
+                <span style="cursor: pointer; user-select: none;" onclick="toggleSort()">
+                    排序：<span id="sort-indicator">倒序(最新) ↓</span>
+                </span>
+            </div>
 
-        <!-- 底部隐秘入口 -->
-        <div class="footer">
-            <span class="secret-login" onclick="handleLoginClick()">© 2024</span> Space.
-            <span id="logout-ui" class="admin-only logout-btn" onclick="logout()">退出管理</span>
+            <!-- 展示时间线 -->
+            <div id="feed-container">
+                <p style="text-align: center; color: #ccc; font-size: 14px;">Loading...</p>
+            </div>
+
+            <div class="footer">
+                <span class="secret-login" onclick="handleLoginClick()">© 2024</span> Space.
+                <span id="logout-ui" class="admin-only logout-btn" onclick="logout()">退出管理</span>
+            </div>
+        </main>
+
+        <!-- 右侧栏：时间线 -->
+        <aside class="sidebar sidebar-right">
+            <details closed>
+                <summary>时间线</summary>
+                <ul id="timeline-list">
+                    <!-- JS 动态生成月份列表 -->
+                </ul>
+            </details>
+        </aside>
+    </div>
+
+    <!-- 编辑博文弹窗 -->
+    <div id="edit-modal">
+        <div class="modal-content">
+            <h3 style="margin-top:0;">编辑博文</h3>
+            <input type="hidden" id="edit-id">
+            <textarea id="edit-content" style="height: 150px;"></textarea>
+            <input type="text" id="edit-collections" placeholder="所属合集 (逗号分隔)">
+            <div class="action-row" style="margin-bottom:0;">
+                <button class="btn" onclick="closeEditModal()">取消</button>
+                <button class="btn" style="background:var(--text-main);color:white;" onclick="saveEdit()">保存修改</button>
+            </div>
         </div>
     </div>
 
@@ -117,11 +187,19 @@
         // ！！！换成你的 Worker 网址！！！
         const API_BASE_URL = 'https://keystorage.winnisky25.workers.dev'; 
         
-        let blogData = { avatar: "", textPosts: [], links: [] };
+        // 全新的数据结构
+        let blogData = { 
+            avatar: "", 
+            collections: [], // 存储所有出现过的合集名
+            posts: [] // 统一存储所有类型的博文
+        };
+
+        // 状态控制
+        let currentFilter = { type: 'all', value: null }; // type: all, collection, month
+        let sortOrder = 'desc'; // desc: 倒序(最新)，asc: 正序(最早)
 
         // ================= 权限控制逻辑 =================
         function checkLoginState() {
-            // 如果本地缓存里有密码，就默认进入博主模式
             if (localStorage.getItem('adminPass')) {
                 document.body.classList.add('is-admin');
             } else {
@@ -130,98 +208,220 @@
         }
 
         async function handleLoginClick() {
-            if (document.body.classList.contains('is-admin')) return; // 已登录不作处理
-            
+            if (document.body.classList.contains('is-admin')) return;
             const pass = prompt("站长通道：请输入管理密码");
             if (!pass) return;
-
             try {
-                // 向后端验证密码对不对
-                const res = await fetch(`${API_BASE_URL}/verify-auth`, {
-                    method: 'POST',
-                    headers: { 'Admin-Password': pass }
-                });
-                
+                const res = await fetch(`${API_BASE_URL}/verify-auth`, { method: 'POST', headers: { 'Admin-Password': pass } });
                 if (res.ok) {
-                    // 密码正确，存入本地并刷新状态
                     localStorage.setItem('adminPass', pass);
                     checkLoginState();
-                    alert("欢迎回来，站长！编辑功能已解锁。");
-                } else {
-                    alert("密码错误，访客请退散。");
-                }
-            } catch (err) {
-                alert("网络或接口错误。");
-            }
+                    renderFeed(); // 重新渲染以显示编辑/删除按钮
+                    alert("欢迎回来，站长！");
+                } else { alert("密码错误，访客请退散。"); }
+            } catch (err) { alert("网络或接口错误。"); }
         }
 
         function logout() {
             localStorage.removeItem('adminPass');
             checkLoginState();
-            alert("已退出管理模式，当前为纯净访客视图。");
+            renderFeed();
+            alert("已退出管理模式。");
         }
 
-        // 一个通用的获取当前密码的函数，失效自动清理
         function getAuthPass() {
             const pass = localStorage.getItem('adminPass');
             if (!pass) {
-                alert("认证失效，请点击底部 © 重新登录！");
+                alert("认证失效，请重新登录！");
                 document.body.classList.remove('is-admin');
                 return null;
             }
             return pass;
         }
-        // ===============================================
 
+        // ================= 数据初始化与兼容 =================
         window.onload = async function() {
-            checkLoginState(); // 初始化权限状态
-
+            checkLoginState();
             try {
                 const res = await fetch(`${API_BASE_URL}/get-data`);
-                blogData = await res.json();
+                let rawData = await res.json();
+                
+                // 兼容旧版本数据结构，平滑迁移
+                if (!rawData.posts) {
+                    rawData.posts = [];
+                    rawData.collections = [];
+                    if (rawData.textPosts) {
+                        rawData.textPosts.forEach(t => rawData.posts.push({ id: Date.now()+Math.random(), type: 'text', content: t, timestamp: Date.now(), collections: [] }));
+                    }
+                    if (rawData.links) {
+                        rawData.links.forEach(l => rawData.posts.push({ id: Date.now()+Math.random(), type: 'link', url: l.url, desc: l.desc, timestamp: Date.now(), collections: [] }));
+                    }
+                }
+                
+                blogData = rawData;
                 if (blogData.avatar) document.getElementById('avatar-img').src = blogData.avatar;
+                
+                updateSidebars();
                 renderFeed();
             } catch (err) {
                 document.getElementById('feed-container').innerHTML = "<p style='text-align:center;'>加载失败，请检查 Worker 网址。</p>";
             }
         };
 
+        // ================= 侧栏与视图更新 =================
+        function updateSidebars() {
+            // 更新归档合集列表
+            const colList = document.getElementById('collection-list');
+            colList.innerHTML = '';
+            blogData.collections.forEach(c => {
+                colList.innerHTML += `<li onclick="setFilter('collection', '${c}')"># ${c}</li>`;
+            });
+
+            // 更新时间线列表
+            const timeList = document.getElementById('timeline-list');
+            timeList.innerHTML = '';
+            let months = new Set();
+            blogData.posts.forEach(p => {
+                const d = new Date(p.timestamp);
+                months.add(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2, '0')}`);
+            });
+            Array.from(months).sort().reverse().forEach(m => {
+                timeList.innerHTML += `<li onclick="setFilter('month', '${m}')">${m}</li>`;
+            });
+        }
+
+        function setFilter(type, value) {
+            currentFilter = { type, value };
+            
+            // 更新标题
+            let title = "全部内容";
+            if (type === 'collection') title = `合集：${value}`;
+            if (type === 'month') title = `时间轴：${value}`;
+            document.getElementById('current-view-title').innerText = title;
+
+            // 高亮左侧分类
+            document.querySelectorAll('.sidebar li').forEach(el => el.classList.remove('active'));
+            if(type === 'all') document.getElementById('nav-all').classList.add('active');
+
+            renderFeed();
+        }
+
+        function toggleSort() {
+            sortOrder = sortOrder === 'desc' ? 'asc' : 'desc';
+            document.getElementById('sort-indicator').innerText = sortOrder === 'desc' ? "倒序(最新) ↓" : "正序(最早) ↑";
+            renderFeed();
+        }
+
+        // ================= 核心渲染引擎 =================
         function renderFeed() {
             const container = document.getElementById('feed-container');
             container.innerHTML = "";
-            blogData.textPosts.slice().reverse().forEach(post => {
-                container.innerHTML += `<div class="feed-item"><div class="feed-text">${post}</div></div>`;
+            
+            // 过滤
+            let displayPosts = blogData.posts.filter(p => {
+                if (currentFilter.type === 'all') return true;
+                if (currentFilter.type === 'collection') return p.collections && p.collections.includes(currentFilter.value);
+                if (currentFilter.type === 'month') {
+                    const d = new Date(p.timestamp);
+                    const m = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2, '0')}`;
+                    return m === currentFilter.value;
+                }
+                return true;
             });
-            blogData.links.slice().reverse().forEach(link => {
-                container.innerHTML += `<div class="feed-item"><a href="${link.url}" target="_blank" class="feed-link">${link.desc}</a></div>`;
+
+            // 排序
+            displayPosts.sort((a, b) => {
+                return sortOrder === 'desc' ? b.timestamp - a.timestamp : a.timestamp - b.timestamp;
             });
+
+            if (displayPosts.length === 0) {
+                container.innerHTML = "<p style='text-align:center; color:#ccc; font-size: 14px;'>暂无内容</p>";
+                return;
+            }
+
+            // 渲染
+            displayPosts.forEach(post => {
+                const dateStr = new Date(post.timestamp).toLocaleString('zh-CN', { hour12: false });
+                const tagsStr = (post.collections || []).map(c => `#${c}`).join(' ');
+                
+                // 管理员操作按钮
+                const adminHtml = `
+                    <div class="admin-only admin-only-inline">
+                        <button class="btn btn-small" onclick="editPost('${post.id}')">编辑</button>
+                        <button class="btn btn-small" style="color:#d9534f;" onclick="deletePost('${post.id}')">删除</button>
+                    </div>`;
+
+                let contentHtml = '';
+                if (post.type === 'text') {
+                    contentHtml = `<div class="feed-text">${post.content}</div>`;
+                } else if (post.type === 'link') {
+                    contentHtml = `<a href="${post.url}" target="_blank" class="feed-link">${post.desc}</a>`;
+                }
+
+                container.innerHTML += `
+                    <div class="feed-item">
+                        ${contentHtml}
+                        <div class="feed-meta">
+                            <span><span class="feed-tags">${tagsStr}</span>${dateStr}</span>
+                            ${adminHtml}
+                        </div>
+                    </div>`;
+            });
+        }
+
+        // ================= 发文与保存 =================
+        function parseCollections(inputStr) {
+            if (!inputStr) return [];
+            return inputStr.split(/[,，]/).map(s => s.trim()).filter(s => s);
+        }
+
+        function extractCollections(postsArr) {
+            let cols = new Set();
+            postsArr.forEach(p => {
+                (p.collections || []).forEach(c => cols.add(c));
+            });
+            return Array.from(cols);
         }
 
         async function postContent(type) {
             const pass = getAuthPass();
-            if (!pass) return; // 没密码就阻断
+            if (!pass) return;
+
+            const colStr = document.getElementById('post-collections').value;
+            const cols = parseCollections(colStr);
+
+            let newPost = {
+                id: Date.now().toString() + Math.floor(Math.random()*1000),
+                type: type,
+                timestamp: Date.now(),
+                collections: cols
+            };
 
             if (type === 'text') {
                 const text = document.getElementById('text-input').value;
                 if (!text) return alert("内容不能为空");
-                blogData.textPosts.push(text);
+                newPost.content = text;
                 document.getElementById('text-input').value = "";
             } else if (type === 'link') {
                 const url = document.getElementById('link-url').value;
                 const desc = document.getElementById('link-desc').value;
                 if (!url || !desc) return alert("请填写完整");
-                blogData.links.push({ url: url, desc: desc });
+                newPost.url = url;
+                newPost.desc = desc;
                 document.getElementById('link-url').value = "";
                 document.getElementById('link-desc').value = "";
             }
 
-            saveDataToBackend(pass);
+            blogData.posts.push(newPost);
+            blogData.collections = extractCollections(blogData.posts);
+            
+            await saveDataToBackend(pass);
         }
 
+        // ================= 上传文件 =================
         async function uploadFile(event, type) {
             const file = event.target.files[0];
             if (!file) return;
-
             const pass = getAuthPass();
             if (!pass) return;
 
@@ -244,8 +444,10 @@
                     document.getElementById('avatar-img').src = imageUrl;
                     saveDataToBackend(pass);
                 } else if (type === 'photo') {
-                    blogData.textPosts.push(`<img src="${imageUrl}" style="max-width:100%; border-radius:5px;">`);
-                    saveDataToBackend(pass);
+                    // 图片直接插入当前发布框
+                    const textInput = document.getElementById('text-input');
+                    textInput.value += `\n<img src="${imageUrl}" style="max-width:100%; border-radius:5px; margin-top:10px;">\n`;
+                    renderFeed(); // 恢复界面
                 }
             } catch (err) {
                 alert(err.message);
@@ -254,6 +456,65 @@
             }
         }
 
+        // ================= 编辑与删除 =================
+        function deletePost(id) {
+            if(!confirm("确定要永久删除这条博文吗？")) return;
+            const pass = getAuthPass();
+            if (!pass) return;
+
+            blogData.posts = blogData.posts.filter(p => p.id !== id);
+            blogData.collections = extractCollections(blogData.posts);
+            saveDataToBackend(pass);
+        }
+
+        function editPost(id) {
+            const post = blogData.posts.find(p => p.id === id);
+            if (!post) return;
+            
+            document.getElementById('edit-id').value = id;
+            document.getElementById('edit-collections').value = (post.collections || []).join(', ');
+            
+            if (post.type === 'text') {
+                document.getElementById('edit-content').value = post.content;
+            } else if (post.type === 'link') {
+                document.getElementById('edit-content').value = `${post.url}\n${post.desc}`;
+                document.getElementById('edit-content').placeholder = "第一行写URL\n第二行写描述";
+            }
+
+            document.getElementById('edit-modal').style.display = 'flex';
+        }
+
+        function closeEditModal() {
+            document.getElementById('edit-modal').style.display = 'none';
+        }
+
+        async function saveEdit() {
+            const pass = getAuthPass();
+            if (!pass) return;
+
+            const id = document.getElementById('edit-id').value;
+            const newContent = document.getElementById('edit-content').value;
+            const colsStr = document.getElementById('edit-collections').value;
+            
+            let post = blogData.posts.find(p => p.id === id);
+            if (!post) return;
+
+            post.collections = parseCollections(colsStr);
+
+            if (post.type === 'text') {
+                post.content = newContent;
+            } else if (post.type === 'link') {
+                const lines = newContent.split('\n');
+                post.url = lines[0] || '';
+                post.desc = lines[1] || lines[0];
+            }
+
+            blogData.collections = extractCollections(blogData.posts);
+            closeEditModal();
+            await saveDataToBackend(pass);
+        }
+
+        // ================= 与后端通信 =================
         async function saveDataToBackend(pass) {
             try {
                 const res = await fetch(`${API_BASE_URL}/save-data`, {
@@ -262,13 +523,14 @@
                     body: JSON.stringify(blogData)
                 });
                 if (res.ok) {
+                    updateSidebars();
                     renderFeed();
                 } else {
-                    throw new Error("密码错误");
+                    throw new Error("密码错误或权限不足");
                 }
             } catch (err) {
                 alert("保存失败：" + err.message);
-                if (err.message.includes('密码错误')) logout();
+                if (err.message.includes('密码')) logout();
             }
         }
 
